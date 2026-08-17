@@ -145,7 +145,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isMobileOpen = false
               Precisa de ajuda com o cardápio ou quer solicitar novas alterações no aplicativo?
             </p>
             <a
-              href="https://api.whatsapp.com/send?phone=5589994440907&text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20no%20meu%20Card%C3%A1pio"
+              href="https://api.whatsapp.com/send?phone=5589994378466&text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20no%20meu%20Card%C3%A1pio"
               target="_blank"
               rel="noreferrer"
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-600/20"
