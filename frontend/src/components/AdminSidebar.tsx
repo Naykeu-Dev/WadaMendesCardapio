@@ -107,7 +107,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isMobileOpen = false
             </NavLink>
             <NavLink to="/admin/settings" onClick={closeMobile} className={linkClass}>
               <Clock size={19} />
-              <span>Horários</span>
+              <span>Configurações</span>
             </NavLink>
           </nav>
         </div>

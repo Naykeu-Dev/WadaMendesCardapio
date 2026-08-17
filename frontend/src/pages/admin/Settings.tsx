@@ -17,8 +17,6 @@ export const Settings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Modal de Confirmação da Senha
   const [showPasswordConfirmModal, setShowPasswordConfirmModal] = useState(false);
 
   const MASTER_PIN = localStorage.getItem('@custom_admin_pin') || import.meta.env.VITE_ADMIN_PIN || 'Wada@2026!';
@@ -196,7 +194,7 @@ export const Settings: React.FC = () => {
           </form>
         </div>
 
-        {/* Modal de Confirmação de Troca de Senha */}
+        {/* Modal de Confirmação */}
         {showPasswordConfirmModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
             <div className="bg-white dark:bg-[#18181b] border border-gray-200 dark:border-zinc-800 max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4">
@@ -206,7 +204,7 @@ export const Settings: React.FC = () => {
                 <p><span className="text-gray-400">Nova Senha:</span> <strong className="text-[var(--primary-accent)]">{newPassword}</strong></p>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                Guarde a nova senha com segurança para não perder o acesso ao painel.
+                Guarde a nova senha com segurança para não perder o acesso.
               </p>
               <div className="flex gap-2 justify-center pt-2">
                 <button 
