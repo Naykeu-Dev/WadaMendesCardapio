@@ -17,6 +17,9 @@ export const Settings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Modal de Confirmação da Senha
+  const [showPasswordConfirmModal, setShowPasswordConfirmModal] = useState(false);
 
   const MASTER_PIN = localStorage.getItem('@custom_admin_pin') || import.meta.env.VITE_ADMIN_PIN || 'Wada@2026!';
 
@@ -38,18 +41,24 @@ export const Settings: React.FC = () => {
     setTimeout(() => setShowSavedToast(false), 3000);
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleOpenPasswordModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (currentPassword !== MASTER_PIN) {
       setPasswordMsg({ type: 'error', text: 'Senha atual incorreta!' });
       return;
     }
     if (newPassword.length < 4) {
-      setPasswordMsg({ type: 'error', text: 'A nova senha deve ter no mínimo 4 dígitos.' });
+      setPasswordMsg({ type: 'error', text: 'A nova senha deve ter no mínimo 4 caracteres.' });
       return;
     }
+    setPasswordMsg(null);
+    setShowPasswordConfirmModal(true);
+  };
+
+  const handleExecutePasswordChange = () => {
     localStorage.setItem('@custom_admin_pin', newPassword);
     setPasswordMsg({ type: 'success', text: 'Senha alterada com sucesso!' });
+    setShowPasswordConfirmModal(false);
     setCurrentPassword('');
     setNewPassword('');
     setTimeout(() => setPasswordMsg(null), 3000);
@@ -71,6 +80,7 @@ export const Settings: React.FC = () => {
           <span className="font-extrabold text-sm text-gray-900 dark:text-white">Configurações</span>
         </div>
 
+        {/* Horários */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-gray-900 dark:text-white">Horários de Atendimento</h1>
@@ -147,7 +157,7 @@ export const Settings: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleChangePassword} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <form onSubmit={handleOpenPasswordModal} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div>
               <label className="text-[11px] font-bold text-gray-700 dark:text-zinc-300">Senha Atual</label>
               <input
@@ -185,6 +195,36 @@ export const Settings: React.FC = () => {
             </div>
           </form>
         </div>
+
+        {/* Modal de Confirmação de Troca de Senha */}
+        {showPasswordConfirmModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-[#18181b] border border-gray-200 dark:border-zinc-800 max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4">
+              <h3 className="font-black text-lg text-gray-900 dark:text-white">Confirmar Nova Senha?</h3>
+              <div className="text-left text-xs bg-gray-50 dark:bg-zinc-900 p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-2">
+                <p><span className="text-gray-400">Senha Atual:</span> <strong className="text-gray-800 dark:text-zinc-200">{currentPassword}</strong></p>
+                <p><span className="text-gray-400">Nova Senha:</span> <strong className="text-[var(--primary-accent)]">{newPassword}</strong></p>
+              </div>
+              <p className="text-[11px] text-gray-500 dark:text-zinc-400">
+                Guarde a nova senha com segurança para não perder o acesso ao painel.
+              </p>
+              <div className="flex gap-2 justify-center pt-2">
+                <button 
+                  onClick={() => setShowPasswordConfirmModal(false)} 
+                  className="flex-1 px-4 py-2.5 text-gray-500 text-xs font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleExecutePasswordChange} 
+                  className="flex-1 px-4 py-2.5 bg-[var(--primary-accent)] text-white text-xs font-black rounded-xl shadow-md"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showSavedToast && (
           <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom z-50">

@@ -36,7 +36,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    setIsCartOpen(true);
+    // ✅ Não abre o carrinho direto, o cliente abre quando desejar!
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -65,16 +65,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendToWhatsApp = (phone: string, address: string, paymentMethod: string, notes?: string) => {
     if (items.length === 0) return;
 
-    let msg = `🛒 *NOVO PEDIDO - CARDÁPIO DIGITAL*\n`;
+    let msg = `🛒 *NOVO PEDIDO - CHURRASCARIA WADA MENDES*\n`;
     msg += `------------------------------------\n\n`;
     items.forEach((item) => {
       msg += `▪️ *${item.quantity}x* ${item.name} (R$ ${(item.price * item.quantity).toFixed(2)})\n`;
     });
     msg += `\n💰 *Total:* R$ ${total.toFixed(2)}\n`;
-    msg += `📍 *Endereço / Retirada:* ${address || 'Balcão'}\n`;
+    msg += `📍 *Endereço / Mesa:* ${address || 'Balcão'}\n`;
     msg += `💳 *Forma de Pagamento:* ${paymentMethod}\n`;
     if (notes) msg += `📝 *Observações:* ${notes}\n`;
-    msg += `\n_Pedido gerado pelo Cardápio Online_`;
+    msg += `\n_Pedido enviado pelo Cardápio Digital_`;
 
     const cleanPhone = phone.replace(/\D/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`, '_blank');
