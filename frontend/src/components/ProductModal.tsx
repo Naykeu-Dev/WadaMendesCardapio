@@ -48,6 +48,23 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
 
   if (!isOpen) return null;
 
+  // 💵 1. Formatador no Estilo Nubank (Centavos da direita para a esquerda)
+  const formatNubankCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(val);
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Pega apenas os dígitos digitados
+    const onlyDigits = e.target.value.replace(/\D/g, '');
+    // Converte para decimal (dividindo por 100 para criar os centavos)
+    const numericValue = Number(onlyDigits) / 100;
+    setFormData((prev) => ({ ...prev, price: numericValue }));
+  };
+
+  // Upload de Imagem do Dispositivo
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -121,14 +138,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            {/* 💵 Campo de Preço com Máscara Nubank */}
             <div>
-              <label className="text-gray-700 dark:text-zinc-300">Preço (R$)</label>
+              <label className="text-gray-700 dark:text-zinc-300">Preço</label>
               <input 
-                type="number"
-                step="0.50"
-                value={formData.price} 
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                className="w-full mt-1 p-2.5 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-white rounded-xl focus:outline-none"
+                type="text"
+                inputMode="numeric"
+                value={formatNubankCurrency(formData.price || 0)} 
+                onChange={handlePriceChange}
+                placeholder="R$ 0,00"
+                className="w-full mt-1 p-2.5 bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-[var(--primary-accent)] dark:text-orange-400 font-extrabold text-sm rounded-xl focus:outline-none"
               />
             </div>
             <div>
@@ -153,7 +172,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
             />
           </div>
 
-          {/* Toggles de Visibilidade */}
+          {/* Toggles */}
           <div className="pt-2 border-t border-gray-100 dark:border-zinc-800 space-y-2">
             <label className="block text-gray-400 uppercase text-[10px]">Visibilidade no Cardápio</label>
             
@@ -162,7 +181,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ isOpen, onClose, onS
               <input type="checkbox" checked={formData.show_price} onChange={(e) => setFormData({ ...formData, show_price: e.target.checked })} className="w-4 h-4 accent-orange-600" />
             </div>
 
-            {/* ✅ Toggle de Descrição Implementado */}
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-900/60 text-gray-800 dark:text-zinc-200">
               <span>Exibir Descrição</span>
               <input type="checkbox" checked={formData.show_description} onChange={(e) => setFormData({ ...formData, show_description: e.target.checked })} className="w-4 h-4 accent-orange-600" />
