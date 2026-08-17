@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Share2, Sun, Moon, ShoppingBag, ShieldCheck, Code2, Check, X, Sparkles } from 'lucide-react';
+import { Search, Share2, Sun, Moon, ShoppingBag, ShieldCheck, Code2, Check, X, Sparkles, LayoutGrid, Square } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import type { Product } from '../components/ProductCard';
 import { ProductDetailModal } from '../components/ProductDetailModal';
@@ -23,7 +23,10 @@ export const PublicMenu: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [hasLogoError, setHasLogoError] = useState(false);
 
-  // Modal de Confirmação e Toast de Sucesso
+  // 📱 Alternador de 1 ou 2 Colunas no Mobile
+  const [mobileColumns, setMobileColumns] = useState<1 | 2>(1);
+
+  // Modal de Confirmação e Toast
   const [confirmProduct, setConfirmProduct] = useState<Product | null>(null);
   const [addedToast, setAddedToast] = useState<string | null>(null);
 
@@ -46,8 +49,13 @@ export const PublicMenu: React.FC = () => {
   };
 
   const whatsappPhone = '89994440907';
-  const instagramUrl = 'https://www.instagram.com/wadamendes_opioneiro?igsh=aGs1czYycGw5dmtl';
-  const categories = ['Todos', 'Carnes', 'Pratos Principais', 'Acompanhamentos', 'Bebidas', 'Sobremesas'];
+  const instagramUrl = 'https://instagram.com/wadamendeschurrascaria';
+
+  // 🧠 3. FILTROS INTELIGENTES: Só exibe categorias que possuem ao menos 1 prato cadastrado!
+  const availableCategories = [
+    'Todos',
+    ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[],
+  ];
 
   const handleShare = () => {
     if (navigator.share) {
@@ -84,7 +92,7 @@ export const PublicMenu: React.FC = () => {
           <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={handleLogoClick}
-              title="Logo"
+              title="5 toques rápidos para o painel"
               className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-[var(--primary-accent)] overflow-hidden flex items-center justify-center font-black text-white text-xl shadow-xl ring-2 ring-orange-500/30 active:scale-95 transition-transform flex-shrink-0"
             >
               {!hasLogoError ? (
@@ -149,21 +157,32 @@ export const PublicMenu: React.FC = () => {
       {/* Conteúdo Principal */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
         
-        {/* Barra de Busca */}
-        <div className="relative max-w-2xl mx-auto mb-5">
-          <Search className="absolute left-4 top-3.5 text-gray-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar pratos..." 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:outline-none focus:border-[var(--primary-accent)] text-sm text-gray-900 dark:text-white placeholder-gray-400"
-          />
+        {/* Barra de Busca + Alternador de Visualização Mobile (1 vs 2 Colunas) */}
+        <div className="flex items-center gap-2 max-w-2xl mx-auto mb-5">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-3.5 text-gray-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Buscar pratos..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:outline-none focus:border-[var(--primary-accent)] text-sm text-gray-900 dark:text-white placeholder-gray-400"
+            />
+          </div>
+
+          {/* 📱 Botão de Alternar 1 vs 2 Colunas (Visível apenas no celular) */}
+          <button
+            onClick={() => setMobileColumns((c) => (c === 1 ? 2 : 1))}
+            title={`Alternar para ${mobileColumns === 1 ? '2 colunas compactas' : '1 coluna grande'}`}
+            className="sm:hidden p-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl text-gray-700 dark:text-zinc-300 shadow-sm"
+          >
+            {mobileColumns === 1 ? <LayoutGrid size={18} /> : <Square size={18} />}
+          </button>
         </div>
 
-        {/* Categorias */}
+        {/* 🧠 Categorias Inteligentes */}
         <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-none justify-start sm:justify-center">
-          {categories.map((cat) => (
+          {availableCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -178,9 +197,13 @@ export const PublicMenu: React.FC = () => {
           ))}
         </div>
 
-        {/* Grid de Produtos */}
+        {/* Grid de Produtos com Suporte a 1 ou 2 Colunas no Mobile */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-4">
+          <div className={`grid gap-3 sm:gap-6 mt-4 ${
+            mobileColumns === 1 
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+              : 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          }`}>
             {filteredProducts.map((product) => (
               <ProductCard 
                 key={product.id} 
@@ -194,12 +217,12 @@ export const PublicMenu: React.FC = () => {
           <div className="text-center py-20 text-gray-400 space-y-3">
             <p className="text-base font-bold text-gray-700 dark:text-zinc-300">Nenhum prato cadastrado ainda.</p>
             <p className="text-xs max-w-sm mx-auto">
-              O proprietário ainda não cadastrou produtos nesta categoria!
+              Dê 5 toques na logo no topo para entrar no painel do dono e adicionar seus primeiros pratos!
             </p>
           </div>
         )}
 
-        {/* 🌟 RODAPÉ COM SUPER DESTAQUE DO DESENVOLVEDOR 🌟 */}
+        {/* Rodapé com Super Destaque do Desenvolvedor */}
         <footer className="mt-20 border-t border-gray-200 dark:border-zinc-800 pt-8 pb-4 text-center">
           <div className="max-w-md mx-auto bg-white dark:bg-[#121214] border border-gray-200 dark:border-zinc-800 p-5 rounded-3xl shadow-sm space-y-3">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-500 dark:text-zinc-400">
@@ -212,7 +235,7 @@ export const PublicMenu: React.FC = () => {
             </p>
 
             <a 
-              href="https://api.whatsapp.com/send?phone=5589994378466&text=Ol%C3%A1%20Naykeu%2C%20vi%20o%20card%C3%A1pio%20da%20Churrascaria%20Wada%20Mendes%20e%20gostaria%20de%20um%20projeto%20para%20minha%20empresa!" 
+              href="https://api.whatsapp.com/send?phone=5589994440907&text=Ol%C3%A1%20Naykeu%2C%20vi%20o%20card%C3%A1pio%20da%20Churrascaria%20Wada%20Mendes%20e%20gostaria%20de%20um%20projeto%20para%20minha%20empresa!" 
               target="_blank" 
               rel="noreferrer"
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
@@ -255,7 +278,7 @@ export const PublicMenu: React.FC = () => {
         </div>
       )}
 
-      {/* Toast de Sucesso ao Adicionar */}
+      {/* Toast de Sucesso */}
       {addedToast && (
         <div className="fixed top-20 right-4 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold shadow-2xl flex items-center gap-2 animate-in slide-in-from-top duration-300">
           <Check size={18} />

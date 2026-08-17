@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Check, Menu, KeyRound } from 'lucide-react';
+import { Save, Check, Menu, KeyRound, Loader2 } from 'lucide-react';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import { useBusinessHours } from '../../context/BusinessHoursContext';
 import type { DaySchedule } from '../../context/BusinessHoursContext';
+import { supabase } from '../../lib/supabase';
 
 export const Settings: React.FC = () => {
   const { schedule, updateSchedule } = useBusinessHours();
@@ -18,8 +19,7 @@ export const Settings: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPasswordConfirmModal, setShowPasswordConfirmModal] = useState(false);
-
-  const MASTER_PIN = localStorage.getItem('@custom_admin_pin') || import.meta.env.VITE_ADMIN_PIN || 'Wada@2026!';
+  const [changingPass, setChangingPass] = useState(false);
 
   const handleToggleDay = (dayIndex: number) => {
     setCurrentSchedule((prev) =>
@@ -41,8 +41,8 @@ export const Settings: React.FC = () => {
 
   const handleOpenPasswordModal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentPassword !== MASTER_PIN) {
-      setPasswordMsg({ type: 'error', text: 'Senha atual incorreta!' });
+    if (!currentPassword) {
+      setPasswordMsg({ type: 'error', text: 'Digite sua senha atual.' });
       return;
     }
     if (newPassword.length < 4) {
@@ -53,13 +53,30 @@ export const Settings: React.FC = () => {
     setShowPasswordConfirmModal(true);
   };
 
-  const handleExecutePasswordChange = () => {
-    localStorage.setItem('@custom_admin_pin', newPassword);
-    setPasswordMsg({ type: 'success', text: 'Senha alterada com sucesso!' });
-    setShowPasswordConfirmModal(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setTimeout(() => setPasswordMsg(null), 3000);
+  // 🛡️ Executa a troca validando no banco de dados
+  const handleExecutePasswordChange = async () => {
+    setChangingPass(true);
+    try {
+      const { data: success } = await supabase.rpc('change_client_pin', {
+        current_pin: currentPassword,
+        new_pin: newPassword,
+      });
+
+      if (success) {
+        setPasswordMsg({ type: 'success', text: 'Senha alterada no banco com sucesso!' });
+        setShowPasswordConfirmModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+      } else {
+        setShowPasswordConfirmModal(false);
+        setPasswordMsg({ type: 'error', text: 'Senha atual incorreta!' });
+      }
+    } catch {
+      setPasswordMsg({ type: 'error', text: 'Erro ao conectar ao banco.' });
+    } finally {
+      setChangingPass(false);
+      setTimeout(() => setPasswordMsg(null), 4000);
+    }
   };
 
   return (
@@ -145,12 +162,12 @@ export const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* Alterar Senha */}
+        {/* Alterar Senha com Supabase RPC */}
         <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-200 dark:border-zinc-800 space-y-4">
           <div className="flex items-center gap-2.5">
             <KeyRound className="text-[var(--primary-accent)]" size={20} />
             <div>
-              <h3 className="font-black text-base text-gray-900 dark:text-white">Segurança do Painel</h3>
+              <h3 className="font-black text-base text-gray-900 dark:text-white">Segurança do Painel (Banco de Dados)</h3>
               <p className="text-xs text-gray-500 dark:text-zinc-400">Altere a senha de acesso ao painel do dono.</p>
             </div>
           </div>
@@ -200,24 +217,25 @@ export const Settings: React.FC = () => {
             <div className="bg-white dark:bg-[#18181b] border border-gray-200 dark:border-zinc-800 max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4">
               <h3 className="font-black text-lg text-gray-900 dark:text-white">Confirmar Nova Senha?</h3>
               <div className="text-left text-xs bg-gray-50 dark:bg-zinc-900 p-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-2">
-                <p><span className="text-gray-400">Senha Atual:</span> <strong className="text-gray-800 dark:text-zinc-200">{currentPassword}</strong></p>
                 <p><span className="text-gray-400">Nova Senha:</span> <strong className="text-[var(--primary-accent)]">{newPassword}</strong></p>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-zinc-400">
-                Guarde a nova senha com segurança para não perder o acesso.
+                A nova senha será salva no banco e atualizada para todos os dispositivos.
               </p>
               <div className="flex gap-2 justify-center pt-2">
                 <button 
                   onClick={() => setShowPasswordConfirmModal(false)} 
+                  disabled={changingPass}
                   className="flex-1 px-4 py-2.5 text-gray-500 text-xs font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleExecutePasswordChange} 
-                  className="flex-1 px-4 py-2.5 bg-[var(--primary-accent)] text-white text-xs font-black rounded-xl shadow-md"
+                  disabled={changingPass}
+                  className="flex-1 px-4 py-2.5 bg-[var(--primary-accent)] text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1"
                 >
-                  Confirmar
+                  {changingPass ? <Loader2 size={14} className="animate-spin" /> : 'Confirmar'}
                 </button>
               </div>
             </div>
