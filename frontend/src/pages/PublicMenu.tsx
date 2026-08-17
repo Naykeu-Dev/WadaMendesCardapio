@@ -42,7 +42,7 @@ export const PublicMenu: React.FC = () => {
   };
 
   const whatsappPhone = '89994440907';
-  const instagramUrl = 'https://instagram.com/wadamendeschurrascaria';
+  const instagramUrl = 'https://www.instagram.com/wadamendes_opioneiro?igsh=aGs1czYycGw5dmtl';
   const categories = ['Todos', 'Carnes', 'Pratos Principais', 'Acompanhamentos', 'Bebidas', 'Sobremesas'];
 
   const handleShare = () => {
