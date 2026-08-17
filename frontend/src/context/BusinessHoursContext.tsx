@@ -1,54 +1,66 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export interface DaySchedule {
-  dayIndex: number;
-  dayName: string;
-  isOpen: boolean;
-  openTime: string;
-  closeTime: string;
+  day_index: number;
+  day_name: string;
+  is_open: boolean;
+  open_time: string;
+  close_time: string;
 }
-
-const DEFAULT_SCHEDULE: DaySchedule[] = [
-  { dayIndex: 0, dayName: 'Domingo', isOpen: true, openTime: '10:00', closeTime: '18:00' },
-  { dayIndex: 1, dayName: 'Segunda-feira', isOpen: true, openTime: '09:00', closeTime: '22:00' },
-  { dayIndex: 2, dayName: 'Terça-feira', isOpen: true, openTime: '09:00', closeTime: '22:00' },
-  { dayIndex: 3, dayName: 'Quarta-feira', isOpen: true, openTime: '09:00', closeTime: '22:00' },
-  { dayIndex: 4, dayName: 'Quinta-feira', isOpen: true, openTime: '09:00', closeTime: '23:00' },
-  { dayIndex: 5, dayName: 'Sexta-feira', isOpen: true, openTime: '09:00', closeTime: '23:30' },
-  { dayIndex: 6, dayName: 'Sábado', isOpen: true, openTime: '09:00', closeTime: '23:30' },
-];
 
 interface BusinessHoursContextType {
   schedule: DaySchedule[];
-  updateSchedule: (newSchedule: DaySchedule[]) => void;
+  updateSchedule: (newSchedule: DaySchedule[]) => Promise<void>;
   isCurrentlyOpen: boolean;
+  loading: boolean;
 }
 
 const BusinessHoursContext = createContext<BusinessHoursContextType>({} as BusinessHoursContextType);
 
 export const BusinessHoursProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [schedule, setSchedule] = useState<DaySchedule[]>(() => {
-    const saved = localStorage.getItem('@business_schedule');
-    return saved ? JSON.parse(saved) : DEFAULT_SCHEDULE;
-  });
-
+  const [schedule, setSchedule] = useState<DaySchedule[]>([]);
   const [isCurrentlyOpen, setIsCurrentlyOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // 1. Busca os horários do Supabase
+  const fetchSchedule = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('business_hours')
+        .select('*')
+        .order('day_index', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) setSchedule(data);
+    } catch (err) {
+      console.error('Erro ao buscar horários:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('@business_schedule', JSON.stringify(schedule));
+    fetchSchedule();
+  }, []);
+
+  // 2. Calcula status Aberto/Fechado em tempo real
+  useEffect(() => {
+    if (schedule.length === 0) return;
 
     const checkOpenStatus = () => {
       const now = new Date();
       const currentDay = now.getDay();
       const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-      const todaySchedule = schedule.find((s) => s.dayIndex === currentDay);
-      if (!todaySchedule || !todaySchedule.isOpen) {
+      const todaySchedule = schedule.find((s) => s.day_index === currentDay);
+      if (!todaySchedule || !todaySchedule.is_open) {
         setIsCurrentlyOpen(false);
         return;
       }
 
-      const isOpenNow = currentTime >= todaySchedule.openTime && currentTime <= todaySchedule.closeTime;
+      const isOpenNow = currentTime >= todaySchedule.open_time && currentTime <= todaySchedule.close_time;
       setIsCurrentlyOpen(isOpenNow);
     };
 
@@ -57,10 +69,18 @@ export const BusinessHoursProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(interval);
   }, [schedule]);
 
-  const updateSchedule = (newSchedule: DaySchedule[]) => setSchedule(newSchedule);
+  // 3. Salva os horários no Supabase
+  const updateSchedule = async (newSchedule: DaySchedule[]) => {
+    setSchedule(newSchedule);
+    const { error } = await supabase.from('business_hours').upsert(newSchedule);
+    if (error) {
+      console.error('Erro ao atualizar horários:', error);
+      fetchSchedule();
+    }
+  };
 
   return (
-    <BusinessHoursContext.Provider value={{ schedule, updateSchedule, isCurrentlyOpen }}>
+    <BusinessHoursContext.Provider value={{ schedule, updateSchedule, isCurrentlyOpen, loading }}>
       {children}
     </BusinessHoursContext.Provider>
   );
