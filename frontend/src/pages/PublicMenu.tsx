@@ -235,7 +235,7 @@ export const PublicMenu: React.FC = () => {
             </p>
 
             <a 
-              href="https://api.whatsapp.com/send?phone=5589994440907&text=Ol%C3%A1%20Naykeu%2C%20vi%20o%20card%C3%A1pio%20da%20Churrascaria%20Wada%20Mendes%20e%20gostaria%20de%20um%20projeto%20para%20minha%20empresa!" 
+              href="https://api.whatsapp.com/send?phone=5589994378466&text=Ol%C3%A1%20Naykeu%2C%20vi%20o%20card%C3%A1pio%20da%20Churrascaria%20Wada%20Mendes%20e%20gostaria%20de%20um%20projeto%20para%20minha%20empresa!" 
               target="_blank" 
               rel="noreferrer"
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
